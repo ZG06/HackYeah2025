@@ -1,11 +1,70 @@
 import TodayFocusTimeline from "@/components/TodayFocusTimeline";
 import WeekAverageFocusChart from "@/components/WeekAverageFocusChart";
+import { FocusEntry } from "@/types/FocusEntry";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from "expo-router";
+import { useCallback, useState } from "react";
 import { KeyboardAvoidingView, Platform, Text, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 
 
 export default function Dashboard() {
+    const [todayEntries, setTodayEntries] = useState<FocusEntry[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    const calculateTopDistraction = () => {
+        if (todayEntries.length === 0) return null;
+    
+        // Flatten all distractions and count occurrences
+        const distractionCounts = todayEntries
+            .flatMap(entry => entry.distractions || [])
+            .reduce((acc, distraction) => {
+                acc[distraction] = (acc[distraction] || 0) + 1;
+                return acc;
+            }, {} as Record<string, number>);
+    
+        // Find the distraction with the highest count
+        const [topDistraction, count] = Object.entries(distractionCounts).reduce(
+            (top, [distraction, currentCount]) => 
+                currentCount > top[1] ? [distraction, currentCount] : top,
+            ['', 0]
+        );
+    
+        return count > 0 ? { name: topDistraction, count } : null;
+    };
+
+    useFocusEffect(
+        useCallback(() => {
+        const loadTodayEntries = async () => {
+            try {
+                const today = new Date().toISOString().split('T')[0]; // Get YYYY-MM-DD
+                const storedEntries = await AsyncStorage.getItem('@FocusTracker:entries');
+                
+                if (storedEntries) {
+                    const allEntries: FocusEntry[] = JSON.parse(storedEntries);
+                    const todayData = allEntries.filter(entry => 
+                        entry.timestamp.startsWith(today)
+                    );
+                    setTodayEntries(todayData);
+                }
+            } catch (error) {
+                console.error('Error loading entries:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+    
+        loadTodayEntries();
+    }, []));
+
+    const averageFocus = todayEntries.length > 0
+    ? (todayEntries.reduce((sum, entry) => sum + entry.focusLevel, 0) / todayEntries.length).toFixed(1)
+    : 'N/A';
+
+    const totalFocusTime = todayEntries.length * 25;
+
+    const topDistraction = calculateTopDistraction();
 
     return (
         <KeyboardAvoidingView
@@ -28,7 +87,7 @@ export default function Dashboard() {
                             Today's Average
                         </Text>
                         <Text className="text-blue-700 text-6xl font-extrabold">
-                            7.5
+                            {averageFocus}
                         </Text>
                     </View>
                     <View className='items-center justify-center bg-white p-4 rounded-3xl elevation-md'>
@@ -44,7 +103,7 @@ export default function Dashboard() {
                             Entries Today
                         </Text>
                         <Text className="text-orange-700 text-6xl font-extrabold">
-                            2
+                            {todayEntries.length}
                         </Text>
                     </View>
                     <View className='items-center justify-center bg-white p-4 rounded-3xl elevation-md'>
@@ -60,7 +119,7 @@ export default function Dashboard() {
                             Top Distraction
                         </Text>
                         <Text className="text-red-700 text-3xl font-extrabold">
-                            Social Media
+                            {topDistraction?.name}
                         </Text>
                     </View>
                     <View className='items-center justify-center bg-white p-4 rounded-3xl elevation-md'>

@@ -1,6 +1,6 @@
 export type FocusEntry = {
     id: string;
-    timestamp: Date;
+    timestamp: string;
     focusLevel: number;
     activity: string;
     distractions: string[];
