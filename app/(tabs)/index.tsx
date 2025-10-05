@@ -34,6 +34,25 @@ export default function Dashboard() {
         return count > 0 ? { name: topDistraction, count } : null;
     };
 
+    const createTodayTimelineData = () => {
+        const data: { time: string; focus: number}[] = [];
+
+        todayEntries.forEach(entry => {
+            const date = new Date(entry.timestamp).toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            }).toLowerCase();
+
+            data.push({
+                time: date,
+                focus: entry.focusLevel,
+            });
+        });
+
+        return data;
+    }
+
     useFocusEffect(
         useCallback(() => {
         const loadTodayEntries = async () => {
@@ -132,7 +151,7 @@ export default function Dashboard() {
                         Today's Focus Timeline
                     </Text>
                     <View className="w-full h-[300px]">
-                        <TodayFocusTimeline />
+                        <TodayFocusTimeline data={createTodayTimelineData()} />
                     </View>
                 </View>
 
