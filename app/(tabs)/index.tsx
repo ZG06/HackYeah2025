@@ -53,6 +53,38 @@ export default function Dashboard() {
         return data;
     }
 
+    const createWeeklyData = () => {
+        const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        const today = new Date();
+        const currentDay = today.getDay(); // 0 (Sunday) to 6 (Saturday)
+        
+        // Calculate the most recent Monday
+        const monday = new Date(today);
+        monday.setDate(today.getDate() - ((currentDay + 6) % 7));
+        
+        // Create data for each day of the week (Monday to Sunday)
+        const weeklyData = Array(7).fill(0).map((_, i) => {
+            const currentDate = new Date(monday);
+            currentDate.setDate(monday.getDate() + i);
+            const dateString = currentDate.toISOString().split('T')[0];
+            
+            const dayEntries = todayEntries.filter(entry => 
+                entry.timestamp.startsWith(dateString)
+            );
+            
+            const avgFocus = dayEntries.length > 0
+                ? dayEntries.reduce((sum, entry) => sum + entry.focusLevel, 0) / dayEntries.length
+                : 0;
+    
+            return {
+                day: days[i], // Use the day name from our array
+                focus: parseFloat(avgFocus.toFixed(1))
+            };
+        });
+    
+        return weeklyData;
+    };
+
     useFocusEffect(
         useCallback(() => {
         const loadTodayEntries = async () => {
@@ -160,7 +192,7 @@ export default function Dashboard() {
                     Weekly Average Focus
                     </Text>
                     <View className="w-full h-[300px]">
-                        <WeekAverageFocusChart />
+                        <WeekAverageFocusChart data={createWeeklyData()} />
                     </View>
                 </View>
             </ScrollView>
