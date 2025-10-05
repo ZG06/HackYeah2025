@@ -167,32 +167,34 @@ export default function LogFocus() {
                     </View>
 
                     {/* Flatlist with distracting things */}
-                    <View className="gap-y-4 mt-6">
-                        <Text className="text-lg font-semibold text-slate-900">What's distracting you?</Text>
-                        <FlatList
-                            keyExtractor={(item) => item.label}
-                            data={DISTRACTION_OPTIONS}
-                            numColumns={2}
-                            scrollEnabled={false}
-                            columnWrapperStyle={{
-                                gap: 12,
-                                paddingHorizontal: 4,
-                                marginBottom: 12
-                            }}
-                            renderItem={({ item, index }) => {
-                                return (
-                                    <View className="flex-1">
-                                        <DistractionCard
-                                            label={item.label}
-                                            icon={item.icon}
-                                            isSelected={distractions.includes(index)}
-                                            onPress={() => toggleDistraction(index)}
-                                        />
-                                    </View>
-                                )
-                            }}
-                        />
-                    </View>
+                    {focusLevel <= 8 && (
+                        <View className="gap-y-4 mt-6">
+                            <Text className="text-lg font-semibold text-slate-900">What's distracting you?</Text>
+                            <FlatList
+                                keyExtractor={(item) => item.label}
+                                data={DISTRACTION_OPTIONS}
+                                numColumns={2}
+                                scrollEnabled={false}
+                                columnWrapperStyle={{
+                                    gap: 12,
+                                    paddingHorizontal: 4,
+                                    marginBottom: 12
+                                }}
+                                renderItem={({ item, index }) => {
+                                    return (
+                                        <View className="flex-1">
+                                            <DistractionCard
+                                                label={item.label}
+                                                icon={item.icon}
+                                                isSelected={distractions.includes(index)}
+                                                onPress={() => toggleDistraction(index)}
+                                            />
+                                        </View>
+                                    )
+                                }}
+                            />
+                        </View>
+                    )}
 
                     {/* Input field where user enters additional information about their activities and distractions*/}
                     <View className="gap-y-4 mt-6">
