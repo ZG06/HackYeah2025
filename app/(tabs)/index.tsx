@@ -50,7 +50,7 @@ export default function Dashboard() {
             });
         });
 
-        return data;
+        return data.reverse();
     }
 
     const createWeeklyData = () => {

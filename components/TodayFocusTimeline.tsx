@@ -24,7 +24,10 @@ export default function TodayFocusTimeline({ data }: { data: { time: string; foc
             <View className="flex-row justify-between px-[15px]">
                 {data.map(item => {
                     return (
-                        <Text className="font-semibold text-slate-500">
+                        <Text
+                            key={item.focus}
+                            className="font-semibold text-slate-500"
+                        >
                             {item.time}
                         </Text>
                     )
