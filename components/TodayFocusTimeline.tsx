@@ -17,6 +17,7 @@ export default function TodayFocusTimeline({ data }: { data: { time: string; foc
                         color="#6366f1"
                         strokeWidth={3}
                         animate={{ type: "timing", duration: 300 }}
+                        curveType="natural"
                     />
                 )}
             </CartesianChart>

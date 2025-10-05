@@ -25,7 +25,10 @@ export default function WeekAverageFocusChart({ data }: { data: { day: string; f
             <View className="flex-row justify-between px-[15px]">
                 {data.map(item => {
                     return (
-                        <Text className="font-semibold text-slate-500">
+                        <Text
+                            key={item.day}
+                            className="font-semibold text-slate-500"
+                        >
                             {item.day}
                         </Text>
                     )
