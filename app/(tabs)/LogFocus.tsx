@@ -1,8 +1,11 @@
 import DistractionCard from "@/components/DistractionCard";
+import { FocusEntry } from "@/types/FocusEntry";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Slider from '@react-native-community/slider';
 import { useState } from "react";
-import { FlatList, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, FlatList, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import uuid from 'react-native-uuid';
 
 
 const DISTRACTION_OPTIONS = [
@@ -17,10 +20,14 @@ const DISTRACTION_OPTIONS = [
     { label: "Other", icon: "❓" }
 ];
 
+const STORAGE_KEY = '@FocusTracker:entries';
+
 export default function LogFocus() {
     const [focusLevel, setFocusLevel] = useState(5);
     const [activity, setActivity] = useState('');
     const [distractions, setDistractions] = useState<number[]>([]);
+    const [notes, setNotes] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
     const getFocusLevelText = () => {
         if (focusLevel <= 3) return 'Highly Distracted'
@@ -43,6 +50,45 @@ export default function LogFocus() {
                 : [...prev, index]
         );
     };
+
+    const handleSubmit = async () => {
+        if (!activity.trim()) {
+            Alert.alert('Required', 'Please enter what you are working on');
+            return;
+        }
+
+        try {
+            setIsLoading(true);
+            
+            const newEntry: FocusEntry = {
+                id: uuid.v4(),
+                timestamp: new Date().toISOString(),
+                focusLevel,
+                activity: activity.trim(),
+                distractions: distractions.map(i => DISTRACTION_OPTIONS[i].label),
+                notes: notes.trim() || undefined,
+            }
+
+            const existingEntries = await AsyncStorage.getItem(STORAGE_KEY);
+            const entries = existingEntries ? JSON.parse(existingEntries) : [];
+
+            const updatedEntries = [newEntry, ...entries];
+
+            await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updatedEntries));
+            
+            Alert.alert('Focus logged successfully!');
+            
+            setActivity('');
+            setNotes('');
+            setFocusLevel(5);
+            setDistractions([]);
+            
+        } catch (error) {
+            Alert.alert('Failed to save entry. Please try again.')
+        } finally {
+            setIsLoading(false);
+        }
+    }
 
     const StepMarker = (value: number) => {
         return (
@@ -155,19 +201,27 @@ export default function LogFocus() {
                             multiline={true}
                             maxLength={100}
                             placeholder="Any additional thoughts or context..."
-                            value={activity}
-                            onChangeText={setActivity}
+                            value={notes}
+                            onChangeText={setNotes}
                             className="h-24 text-base border border-slate-300 focus:border-indigo-400 rounded-md transition-colors"
                             placeholderClassName="p-4"
                         />
                     </View>
 
                     <TouchableOpacity
-                        className="items-center justify-center h-16 mt-8 bg-purple-600 rounded-lg"
+                        className={`items-center justify-center h-16 mt-8 bg-purple-600 rounded-lg ${isLoading && 'opacity-50'}`}
+                        onPress={handleSubmit}
+                        disabled={isLoading}
                     >
-                        <Text className="text-white font-bold text-xl">
-                            Log Focus Entry
-                        </Text>
+                        {isLoading ? (
+                            <Text className="text-white font-bold text-xl">
+                                Saving...
+                            </Text>
+                        ) : (
+                            <Text className="text-white font-bold text-xl">
+                                Log Focus Entry
+                            </Text>
+                        )}
                     </TouchableOpacity>
 
                 </View>
